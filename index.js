@@ -1,20 +1,45 @@
-// index.js
+// pages/index.js
 
-import React from 'react'
-import ipfsClient from './utils/ipfs'
+import { useState } from 'react'
+import ipfsClient from './ipfs'
+import { saveHash, getHashes } from './lib/db'
 
 export default function Home() {
 
-  async function addToIPFS() {
-    const result = await ipfsClient.add('Hello World!') 
-    console.log(result)
+  const [file, setFile] = useState()
+  const [ipfsHash, setIpfsHash] = useState()
+
+  async function onChange(e) {
+    const file = e.target.files[0]
+    try {
+      const added = await ipfsClient.add(file)
+      setIpfsHash(added.path)
+      await onUpload(added.path) 
+    } catch (error) {
+      console.log('Error uploading file: ', error)
+    }
+  }
+
+  async function onUpload(hash) {
+    await saveHash(hash)
+  }
+
+  async function loadHashes() {
+    const hashes = await getHashes()
+    console.log(hashes)
   }
 
   return (
-    <div>
-      <h1>Freetube</h1>
-      <button onClick={addToIPFS}>Add to IPFS</button>
-    </div>
+    <>
+      <input 
+        type="file"
+        onChange={onChange} 
+      />
+      
+      <button onClick={loadHashes}>
+        Carregar hashes
+      </button>
+    </>
   )
 
 }
